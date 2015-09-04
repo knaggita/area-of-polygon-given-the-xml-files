@@ -1,100 +1,116 @@
-__author__ = 'Keziah Blessing'
+__author__ = 'KEZIAH'
 import xml.dom.minidom
 import os
 
-path = 'C:/Users/Keziah Blessing/Desktop/imagesFile'
-for filename in os.listdir(path):
-    if not filename.endswith('.xml'):
-        continue
+class ImageAreas(object):
 
-    images = open('image.txt', 'a+')
-    # images.write('%-40s %10s %20s %20s \n' % ("IMAGE NAME", "NECROSIS AREA", "IMAGE AREA", "PERCENTAGE"))
-    images.close()
-    # Open XML document using minidom parser
-    DOMTree = xml.dom.minidom.parse(filename)
-    printout = []
-    a = 0
-    a2 = 0
-    a3 = 0
-    percentage = 0
-    annotation = DOMTree.documentElement
-    imageName = annotation.getElementsByTagName("filename")[0]
-    ima = str(imageName.childNodes[0].data)
-    # printout.append(ima)
-    print "Image Name: %s" % imageName.childNodes[0].data
+   # loop through the folder and get only files ending with .xml 
+    def loopThroughFolder(self):
+        folderelements = []
+        path = 'C:/Users/KEZIAH/Desktop/imagesFile'
+        for filename in os.listdir(path):
+            if not filename.endswith('.xml'):
+                continue            
+            folderelements.append(filename)   
+        
+        # print folderelements
+        return folderelements
 
-    obj = annotation.getElementsByTagName("object")
-    for objects in obj:
+    def areas(self):
+        imagedetails = []
+        fileElements = []
+        necrosisList = []
+        image = []
+        # instatiate ImageAreas class and use the loopthroughfolder method
+        folder1 = ImageAreas()
+        for xmlfiles in folder1.loopThroughFolder():
 
-        name = objects.getElementsByTagName('name')[0]
-        # print "name: %s" % name.childNodes[0].data
+            DOMTree = xml.dom.minidom.parse(xmlfiles)
+            printout = []
+            wholeimagearea = 0           
+            percentage = 0
+            annotation = DOMTree.documentElement
+            imageName = annotation.getElementsByTagName("filename")[0]
+            ima = str(imageName.childNodes[0].data)
+            
+            print "Image Name: %s" % imageName.childNodes[0].data
 
-        if (name.childNodes[0].data == 'necrosis') or (name.childNodes[0].data == 'nicosis') or (
-                    name.childNodes[0].data == 'necosis'):
+            obj = annotation.getElementsByTagName("object")
+            for objects in obj:
 
-            points = objects.getElementsByTagName("pt")
+                name = objects.getElementsByTagName('name')[0]
+               
+                points = objects.getElementsByTagName("pt")
 
-            # Print detail of each point.
-            i = 0
-            necrosisList = []
-            for point in points:
-                x = point.getElementsByTagName('x')[0]
-                Xcoord = int(x.childNodes[0].data)
-                y = point.getElementsByTagName('y')[0]
-                Ycoord = int(y.childNodes[0].data)
+                # Print detail of each point.
+                i = 0
+                # contains x,y cordinates of anecrosis part of the image
+                necrosisList = []
+                # contains x,y cordinates of the whole image
+                areaList = []
+                part = []
 
-                necrosisList.append((Xcoord, Ycoord))
+                # get the x,y cordinates of the object from the xml file
+                for point in points:
+                    x = point.getElementsByTagName('x')[0]
+                    Xcoord = int(x.childNodes[0].data)
+                    y = point.getElementsByTagName('y')[0]
+                    Ycoord = int(y.childNodes[0].data)
+                    if (name.childNodes[0].data == 'necrosis') or (name.childNodes[0].data == 'nicosis') or (
+                            name.childNodes[0].data == 'necosis'):                
+                        necrosisList.append((Xcoord, Ycoord))
+                        part = necrosisList
 
-            sum1 = 0.0
-            sum2 = 0.0
-            b = len(points)
+                    if name.childNodes[0].data == 'Area':
+                        areaList.append((Xcoord, Ycoord))
+                        part = areaList
 
-            for i in range(len(necrosisList) - 1):
-                sum1 = sum1 + necrosisList[i][0] * necrosisList[i + 1][1]
-                # print str(matrix[i][0]) +'*'+str(matrix[i+1][1]) +'='+str(matrix[i][0]*matrix[i+1][1]);
-            for i in range(len(necrosisList) - 1):
-                sum2 = sum2 + necrosisList[i][1] * necrosisList[i + 1][0]
-                # print str(matrix[i][1]) +'*'+str(matrix[i+1][0]) +'='+str(matrix[i][1]*matrix[i+1][0]);
-            area = (abs(sum1 - sum2) / 2.0)
-            a = area
-            printout.append(a)
-            print "Area of the necrosis = %.1f" % a
+                # calculate area of the polygon given the x,y cordinates
+                sum1 = 0.0
+                sum2 = 0.0
+                count = len(points)
 
-        if name.childNodes[0].data == 'Area':
-            points = objects.getElementsByTagName("pt")
+                for i in range(len(part) - 1):
+                    sum1 = sum1 + part[i][0] * part[i + 1][1]                 
+                for i in range(len(part) - 1):
+                    sum2 = sum2 + part[i][1] * part[i + 1][0]                    
+                area = (abs(sum1 - sum2) / 2.0)
+                if part == necrosisList:
+                    printout.append(area)
+                    necrosisarea = sum(printout)
+                if part == areaList:
+                    wholeimagearea = area
 
-            # Print detail of each point.
-            AreaList = []
-            for point in points:
-                x = point.getElementsByTagName('x')[0]
-                xcoor = int(x.childNodes[0].data)
-                y = point.getElementsByTagName('y')[0]
-                ycoor = int(y.childNodes[0].data)
-                AreaList.append((xcoor, ycoor))
+            print "Area of the necrosis = %.1f" %  necrosisarea 
+            print "Area the the image = %.1f" % wholeimagearea
 
-            sum1 = 0.0
-            sum2 = 0.0
-            count = len(points)
+            imagedetails.append(((ima),(necrosisarea), (wholeimagearea)))
+       
+        return imagedetails
 
-            for i in range(len(AreaList) - 1):
-                sum1 = sum1 + AreaList[i][0] * AreaList[i + 1][1]
-                # print str(matrix[i][0]) +'*'+str(matrix[i+1][1]) +'='+str(matrix[i][0]*matrix[i+1][1]);
-            for i in range(len(AreaList) - 1):
-                sum2 = sum2 + AreaList[i][1] * AreaList[i + 1][0]
-                # print str(matrix[i][1]) +'*'+str(matrix[i+1][0]) +'='+str(matrix[i][1]*matrix[i+1][0]);
-            area = (abs(sum1 - sum2) / 2.0)
-            a2 = area
-            print "Area the whole image = %.1f" % a2
-            # printout.append(a2)
+    # write the image details to afile  
 
-    print printout
-    print sum(printout)
+    def writetofile(self):
 
-    if a2 > 0:
-        percentage = (sum(printout) / a2) * 100
+        folder1 = ImageAreas()
+        images = open('imagesdetails.txt', 'a')  
+        images.write('%-40s %10s %20s %20s \n' % ("IMAGE NAME", "NECROSIS AREA", "IMAGE AREA", "PERCENTAGE"))        
+        for image in folder1. areas():            
+            if image[2] > 0:
+                percentage  = (image[1] / image[2]) * 100                
+            if image[2] == 0:
+                percentage  = 0.0                      
+            images.write('%-40s %-23.1f %-20.1f %.1f \n' % (image[0], image[1], image[2], percentage))
+            
+            # print image
+        images.close()
 
-    images = open('image.txt', 'a')
-    images.write('%-40s %-23.1f %-20.1f %.1f \n' % (imageName.childNodes[0].data, sum(printout), a2, percentage))
+folder1 = ImageAreas()
+folder1.writetofile()
+
+
+
+
 
     images.close()
 
