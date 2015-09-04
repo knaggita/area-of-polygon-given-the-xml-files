@@ -7,6 +7,7 @@ class ImageAreas(object):
    # loop through the folder and get only files ending with .xml 
     def loopThroughFolder(self):
         folderelements = []
+        # this is the path specifying the folder you want to loop through
         path = 'C:/Users/KEZIAH/Desktop/imagesFile'
         for filename in os.listdir(path):
             if not filename.endswith('.xml'):
@@ -107,10 +108,4 @@ class ImageAreas(object):
 
 folder1 = ImageAreas()
 folder1.writetofile()
-
-
-
-
-
-    images.close()
 
